@@ -1,2 +1,4 @@
 
 *.lua
+
+__pycache__/
