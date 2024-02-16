@@ -17,7 +17,6 @@
 
 import numpy as np
 import gmsh
-import gemaModel.mesh.gemaMeshFile as gema
 import gemaModel.mesh.auxMeshProcess as aux
 from gemaModel.physics.physicsGeMA_Mechanical import physicsGeMA_mechanical
 from gemaModel.physics.physicsGeMA_HydroMechanical import physicsGeMA_hydromechanical
@@ -167,15 +166,12 @@ gemaMec  = physicsGeMA_mechanical('PlaneStrain')
 gemaHMec = physicsGeMA_hydromechanical('PlaneStrain')
 
 # Initialize the model
-m = modelGeMA(problemName,[gemaMec,gemaHMec])
+model = modelGeMA(problemName,[gemaMec,gemaHMec])
 
 for material in problemMaterials:
-    print('Material: ',material)
-    m.addMaterial(material,problemMaterials[material])
+    model.addMaterial(material,problemMaterials[material])
 
-m.writeModelFile()
-
-# # ===  MESH EXPORTATION TO GEMA ========================================
+# ===  MESH  =====================================================
 
 # Initialize the mesh object
 mesh = gemaMesh(problemName,dim,gmsh)
@@ -189,8 +185,11 @@ mesh.setCellPhysicalGroup([basalAquiferPG,lowerCapRockPG,reservoirPG,upperCapRoc
 mesh.setNodeSetData([(1, bottomBorderPG),(1, leftBorderPG),(1, rightBorderPG),(0, injPointPG)])
 mesh.setDiscontinuitySet(interfaceElements,faultPG)
 
+# === WRITE FILES TO GEMA ========================================
+
 # Write the mesh file
 mesh.writeMeshFile()
+model.writeModelFile()
 
 # Launch the GUI to see the results:
 gmsh.fltk.run()
