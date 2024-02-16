@@ -1,8 +1,7 @@
-from materialGeMA import materialGema
+from gemaModel.material.materialGeMA import materialGeMA
 
-class materialGema_elastic(materialGema):
-    def __init__(self, name):
-        super(materialGema,self).__init__(name)
-
-    def writeMaterial(self):
-        pass
+class materialGema_elastic(materialGeMA):
+    def __init__(self, _name, _data):
+        super().__init__(_name, _data)
+        self.type         = 'elastic'
+        self.parametersId = ['E','nu']

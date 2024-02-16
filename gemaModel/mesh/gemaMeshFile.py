@@ -1,8 +1,9 @@
 import numpy as np
+from gemaModel.mesh.gmsh2GeMA_ElementTypes import gmsh2GeMA_elementTypes
 
 # Open the file the mesh file
 def openMeshFile(problemName):
-    
+
     # Create file name
     fileName = 'gemaFiles\\' + problemName + '_mesh.lua'
     
@@ -25,16 +26,6 @@ def closeMeshFile(problemName):
     
     with open(fileName, 'a') as file:
         file.write("\nreturn meshData")
-
-# ============================================================================================
-# Define the correspondency between the element types from  Gmsh with GeMA
-def elementNameGmsh2GeMA(elementType):
-    if elementType == 2:
-        gemaElement = "tri3"
-    if elementType == 3:
-        gemaElement = "quad4"
-    return gemaElement
-
 
 # ============================================================================================
 # Print nodes associated with a physical group
@@ -112,7 +103,7 @@ def printElements(problemName,dim,physicalGroupTag,gmsh):
     # Print the elements of the specified element type 
     with open(fileName, 'a') as file:
         for elemType in elemTypes:
-            gemaElement = elementNameGmsh2GeMA(elemType)
+            gemaElement = gmsh2GeMA_elementTypes[elemType]
             file.write("\n")
             file.write(f"-- Mesh {gemaElement} elements of {physicalGroupName}\n")
             file.write("\n")

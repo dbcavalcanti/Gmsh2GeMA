@@ -19,6 +19,11 @@ import numpy as np
 import gmsh
 import gemaModel.mesh.gemaMeshFile as gema
 import gemaModel.mesh.auxMeshProcess as aux
+from gemaModel.physics.physicsGeMA_Mechanical import physicsGeMA_mechanical
+from gemaModel.physics.physicsGeMA_HydroMechanical import physicsGeMA_hydromechanical
+from gemaModel.modelGeMA import modelGeMA
+from gemaModel.mesh.meshGeMA import gemaMesh
+from problemMaterials import problemMaterials
 
 # ===  PROBLEM NAME ===========================================================
 
@@ -155,35 +160,52 @@ gmsh.plugin.run("Crack")
 old, new = gmsh.model.mesh.computeRenumbering('RCMK')
 gmsh.model.mesh.renumberNodes(old, new)
 
+# ===  MATERIALS AND PHYSICS DEFINITION =================================
+
+# Create a physics that will be used in the simulation
+gemaMec  = physicsGeMA_mechanical('PlaneStrain')
+gemaHMec = physicsGeMA_hydromechanical('PlaneStrain')
+
+# Initialize the model
+m = modelGeMA(problemName,[gemaMec,gemaHMec])
+
+for material in problemMaterials:
+    print('Material: ',material)
+    m.addMaterial(material,problemMaterials[material])
+
+m.writeModelFile()
+
 # # ===  MESH EXPORTATION TO GEMA ========================================
 
+mesh = gemaMesh(problemName,dim,gmsh)
+
 # Create the file
-gema.openMeshFile(problemName)
+mesh.openMeshFile()
 
 #Print the nodes
-gema.printNodes(problemName, dim, meshDomain, gmsh)
+mesh.printNodes(meshDomain)
 
 # Print the elements associated with each physical group
-gema.printElements(problemName, dim, basalAquiferPG,  gmsh)
-gema.printElements(problemName, dim, lowerCapRockPG,  gmsh)
-gema.printElements(problemName, dim, reservoirPG,     gmsh)
-gema.printElements(problemName, dim, upperCapRockPG,  gmsh)
-gema.printElements(problemName, dim, upperAquiferPG,  gmsh)
+mesh.printElements(basalAquiferPG)
+mesh.printElements(lowerCapRockPG)
+mesh.printElements(reservoirPG)
+mesh.printElements(upperCapRockPG)
+mesh.printElements(upperAquiferPG)
 
 # Create interface elements
-interfaceElements = gema.createInterfaceElements(faultPG,elementType, gmsh)
+interfaceElements = mesh.createInterfaceElements(faultPG)
 
 # Print the interface elements
-gema.printInterfaceElements(problemName,interfaceElements,faultPG, gmsh)
+mesh.printInterfaceElements(interfaceElements,faultPG)
 
 # Print the node list 
-gema.printNodeSetDataList(problemName, 1, bottomBorderPG, gmsh)
-gema.printNodeSetDataList(problemName, 1, leftBorderPG,   gmsh)
-gema.printNodeSetDataList(problemName, 1, rightBorderPG,  gmsh)
-gema.printNodeSetDataList(problemName, 0, injPointPG,     gmsh)
+mesh.printNodeSetDataList(1, bottomBorderPG)
+mesh.printNodeSetDataList(1, leftBorderPG)
+mesh.printNodeSetDataList(1, rightBorderPG)
+mesh.printNodeSetDataList(0, injPointPG)
 
 # Close the mesh file
-gema.closeMeshFile(problemName)
+mesh.closeMeshFile()
 
 # Launch the GUI to see the results:
 gmsh.fltk.run()
