@@ -1,7 +1,11 @@
 import numpy as np
 
 # Open the file the mesh file
-def openMeshFile(fileName):
+def openMeshFile(problemName):
+    
+    # Create file name
+    fileName = 'gemaFiles\\' + problemName + '_mesh.lua'
+    
     with open(fileName, 'w') as file:
         # Write the header
         file.write("-------------------------------------------------------------\n")
@@ -14,7 +18,11 @@ def openMeshFile(fileName):
 
 # ============================================================================================
 # Close the file the mesh file
-def closeMeshFile(fileName):
+def closeMeshFile(problemName):
+
+    # Create file name
+    fileName = 'gemaFiles\\' + problemName + '_mesh.lua'
+    
     with open(fileName, 'a') as file:
         file.write("\nreturn meshData")
 
@@ -31,7 +39,7 @@ def elementNameGmsh2GeMA(elementType):
 # ============================================================================================
 # Print nodes associated with a physical group
         
-def printNodes(fileName,dim,physicalGroupTag,gmsh):
+def printNodes(problemName,dim,physicalGroupTag,gmsh):
     """
     Print the nodes of the mesh that belongs to the given physical group
 
@@ -42,6 +50,10 @@ def printNodes(fileName,dim,physicalGroupTag,gmsh):
     - gmsh:             Gmsh data structure
 
     """
+
+    # Create file name
+    fileName = 'gemaFiles\\' + problemName + '_mesh.lua'
+    
     with open(fileName, 'a') as file:
         file.write("\n")
         file.write("-- Nodes coordinates\n")
@@ -68,7 +80,7 @@ def printNodes(fileName,dim,physicalGroupTag,gmsh):
 # ============================================================================================
 # Print elements associated with a physical group with specified element type
         
-def printElements(fileName,dim,physicalGroupTag,gmsh):
+def printElements(problemName,dim,physicalGroupTag,gmsh):
     """
     Print the elements of the mesh that belongs to the given physical group
 
@@ -80,6 +92,9 @@ def printElements(fileName,dim,physicalGroupTag,gmsh):
     - gmsh:             Gmsh data structure
 
     """
+
+    # Create file name
+    fileName = 'gemaFiles\\' + problemName + '_mesh.lua'
 
     # Get the name of the physical group
     physicalGroupName = gmsh.model.getPhysicalName(dim, physicalGroupTag)
@@ -113,28 +128,11 @@ def printElements(fileName,dim,physicalGroupTag,gmsh):
             # Add the elements to the meshData
             file.write(f"\nmeshData['{gemaElement}_{physicalGroupName}'] = {gemaElement}_{physicalGroupName}\n")
 
-        # with open(fileName, 'a') as file:
-        # file.write("\n")
-        # file.write(f"-- Mesh elements of {physicalGroupName}\n")
-        # file.write("\n")
-        # file.write(f"local element_{physicalGroupName} = {{\n")
-        # for e in entitiesTags:
-        #     _, elem = gmsh.model.mesh.getElementsByType(elementType, e)
-        #     elem = elem.reshape((-1,elementType+1))
-        #     for i, connectivity in enumerate(elem, start=1):
-        #         file.write("    {")
-        #         file.write(", ".join(str(node) for node in connectivity))
-        #         file.write("},\n")
-        # file.write("}\n")
-
-        # # Add the elements to the meshData
-        # file.write(f"\nmeshData['element_{physicalGroupName}'] = element_{physicalGroupName}\n")
-
 
 # ============================================================================================
 # Print nodes associated with a physical group
         
-def printNodeSetDataList(fileName,dim,physicalGroupTag,gmsh):
+def printNodeSetDataList(problemName,dim,physicalGroupTag,gmsh):
     """
     Print the list of nodes of the mesh that belongs to the given physical group
 
@@ -145,6 +143,9 @@ def printNodeSetDataList(fileName,dim,physicalGroupTag,gmsh):
     - gmsh:             Gmsh data structure
 
     """
+
+    # Create file name
+    fileName = 'gemaFiles\\' + problemName + '_mesh.lua'
 
     # Get the name of the physical group
     physicalGroupName = gmsh.model.getPhysicalName(dim, physicalGroupTag)
@@ -264,7 +265,7 @@ def createInterfaceElements(discontinuitySet,elementType,gmsh):
 # ============================================================================================
 # Print the 2D double-node interface elements
         
-def printInterfaceElements(fileName,interfaceElements,physicalGroupTag,gmsh):
+def printInterfaceElements(problemName,interfaceElements,physicalGroupTag,gmsh):
     """
     Print the zero-thickness interface elements
 
@@ -274,6 +275,9 @@ def printInterfaceElements(fileName,interfaceElements,physicalGroupTag,gmsh):
     - physicalGroupTag : tag of the physical group used to create the interface elements
     - gmsh             : Gmsh data structure
     """
+
+    # Create file name
+    fileName = 'gemaFiles\\' + problemName + '_mesh.lua'
 
     # Get the name of the physical group
     physicalGroupName = gmsh.model.getPhysicalName(1, physicalGroupTag)

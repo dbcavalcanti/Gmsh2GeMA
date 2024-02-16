@@ -20,9 +20,9 @@ import gmsh
 import gemaModel.mesh.gemaMeshFile as gema
 import gemaModel.mesh.auxMeshProcess as aux
 
-# ===  FILE NAME ===========================================================
+# ===  PROBLEM NAME ===========================================================
 
-fileName = "gemaFiles\\Cappa2011_mesh.lua"
+problemName = "Cappa2011"
 
 # ===  INITIALIZE GMSH ====================================================
 
@@ -158,32 +158,32 @@ gmsh.model.mesh.renumberNodes(old, new)
 # # ===  MESH EXPORTATION TO GEMA ========================================
 
 # Create the file
-gema.openMeshFile(fileName)
+gema.openMeshFile(problemName)
 
 #Print the nodes
-gema.printNodes(fileName, dim, meshDomain, gmsh)
+gema.printNodes(problemName, dim, meshDomain, gmsh)
 
 # Print the elements associated with each physical group
-gema.printElements(fileName, dim, basalAquiferPG,  gmsh)
-gema.printElements(fileName, dim, lowerCapRockPG,  gmsh)
-gema.printElements(fileName, dim, reservoirPG,     gmsh)
-gema.printElements(fileName, dim, upperCapRockPG,  gmsh)
-gema.printElements(fileName, dim, upperAquiferPG,  gmsh)
+gema.printElements(problemName, dim, basalAquiferPG,  gmsh)
+gema.printElements(problemName, dim, lowerCapRockPG,  gmsh)
+gema.printElements(problemName, dim, reservoirPG,     gmsh)
+gema.printElements(problemName, dim, upperCapRockPG,  gmsh)
+gema.printElements(problemName, dim, upperAquiferPG,  gmsh)
 
 # Create interface elements
 interfaceElements = gema.createInterfaceElements(faultPG,elementType, gmsh)
 
 # Print the interface elements
-gema.printInterfaceElements(fileName,interfaceElements,faultPG, gmsh)
+gema.printInterfaceElements(problemName,interfaceElements,faultPG, gmsh)
 
 # Print the node list 
-gema.printNodeSetDataList(fileName, 1, bottomBorderPG, gmsh)
-gema.printNodeSetDataList(fileName, 1, leftBorderPG,   gmsh)
-gema.printNodeSetDataList(fileName, 1, rightBorderPG,  gmsh)
-gema.printNodeSetDataList(fileName, 0, injPointPG,     gmsh)
+gema.printNodeSetDataList(problemName, 1, bottomBorderPG, gmsh)
+gema.printNodeSetDataList(problemName, 1, leftBorderPG,   gmsh)
+gema.printNodeSetDataList(problemName, 1, rightBorderPG,  gmsh)
+gema.printNodeSetDataList(problemName, 0, injPointPG,     gmsh)
 
 # Close the mesh file
-gema.closeMeshFile(fileName)
+gema.closeMeshFile(problemName)
 
 # Launch the GUI to see the results:
 gmsh.fltk.run()
