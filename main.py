@@ -22,7 +22,7 @@ import gemaModel.mesh.auxMeshProcess as aux
 
 # ===  FILE NAME ===========================================================
 
-fileName = "Cappa2011_mesh.lua"
+fileName = "gemaFiles\\Cappa2011_mesh.lua"
 
 # ===  INITIALIZE GMSH ====================================================
 

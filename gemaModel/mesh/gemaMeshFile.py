@@ -88,7 +88,11 @@ def printElements(fileName,dim,physicalGroupTag,gmsh):
     entitiesTags = gmsh.model.getEntitiesForPhysicalGroup(dim,physicalGroupTag)
 
     # Get the element types present in the physical group with the specified dimension
-    elemTypes = gmsh.model.mesh.getElementTypes(dim,physicalGroupTag)
+    elemTypes = []
+    for entityTag in entitiesTags:
+        entityElemTypes = gmsh.model.mesh.getElementTypes(dim, entityTag)
+        elemTypes.extend(entityElemTypes)
+    elemTypes = list(set(elemTypes))
 
     # Print the elements of the specified element type 
     with open(fileName, 'a') as file:
