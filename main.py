@@ -17,8 +17,8 @@
 
 import numpy as np
 import gmsh
-import gemaMeshFile as gema
-import auxMeshProcess as aux
+import gemaModel.mesh.gemaMeshFile as gema
+import gemaModel.mesh.auxMeshProcess as aux
 
 # ===  FILE NAME ===========================================================
 
