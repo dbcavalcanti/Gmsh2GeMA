@@ -3,25 +3,48 @@ from gemaModel.mesh.gmsh2GeMA_ElementTypes import gmsh2GeMA_elementTypes
 
 class gemaMesh:
     def __init__(self, _problemName, _dim = 2, gmsh = [] , _stateVariables = [],_nodeData = [], _cellData = [], _cellProperties = [], _nodeSetData = []):
-        self.gmsh             = gmsh
-        self.id               = 'mesh'
-        self.typeName         = 'GemaMesh.elem'
-        self.description      = 'Mesh discretization'
-        self.coordinateUnits  = 'm'
-        self.dim              = _dim
-        self.stateVariables   = _stateVariables
-        self.nodeData         = _nodeData
-        self.cellData         = _cellData
-        self.cellProperties   = _cellProperties
-        self.nodeSetData      = _nodeSetData
-        self.cellGroups       = []
-        self.elementTypes     = []
-        self.integrationRules = []
-        self.fileName         = 'gemaFiles\\' + _problemName + '_mesh.lua'
+        self.gmsh                           = gmsh
+        self.id                             = 'mesh'
+        self.typeName                       = 'GemaMesh.elem'
+        self.description                    = 'Mesh discretization'
+        self.coordinateUnits                = 'm'
+        self.dim                            = _dim
+        self.stateVariables                 = _stateVariables
+        self.nodeData                       = _nodeData
+        self.cellData                       = _cellData
+        self.cellProperties                 = _cellProperties
+        self.nodeSetData                    = _nodeSetData
+        self.hasDiscontinuitySet            = False 
+        self.discontinuitySet               = []
+        self.nodesPhysicalGroup             = []
+        self.cellPhysicalGroups             = []
+        self.discontinuitySetPhysicalGroup  = []
+        self.cellGroups                     = []
+        self.elementTypes                   = []
+        self.integrationRules               = []
+        self.fileName                       = 'gemaFiles\\' + _problemName + '_mesh.lua'
 
     # ---------------------------------------------------------------------
     def createCellGroup(self):
         pass
+
+    # ---------------------------------------------------------------------
+    def setNodesPhysicalGroup(self, _nodesPhysicalGroup):
+        self.nodesPhysicalGroup = _nodesPhysicalGroup
+
+    # ---------------------------------------------------------------------
+    def setCellPhysicalGroup(self, _cellPhysicalGroups):
+        self.cellPhysicalGroups = _cellPhysicalGroups
+
+    # ---------------------------------------------------------------------
+    def setNodeSetData(self, _nodeSetData):
+        self.nodeSetData = _nodeSetData
+
+    # --------------------------------------------------------------------- 
+    def setDiscontinuitySet(self, _discontinuitySet,_discontinuitySetPhysicalGroup):
+        self.discontinuitySet              = _discontinuitySet
+        self.discontinuitySetPhysicalGroup = _discontinuitySetPhysicalGroup
+        self.hasDiscontinuitySet           = True
 
     # ---------------------------------------------------------------------
     def setDescription(self, _description):
@@ -38,6 +61,16 @@ class gemaMesh:
     # ---------------------------------------------------------------------   
     def setId(self, _id):
         self.id = _id
+
+    # ---------------------------------------------------------------------
+    def writeMeshFile(self):
+        self.openMeshFile()
+        self.printNodes(self.nodesPhysicalGroup)
+        self.printElements()
+        if self.hasDiscontinuitySet:
+            self.printInterfaceElements(self.discontinuitySet,self.discontinuitySetPhysicalGroup)
+        self.printNodeSetDataList()
+        self.closeMeshFile()
 
     # ---------------------------------------------------------------------
     # Open the file the mesh file
@@ -96,55 +129,49 @@ class gemaMesh:
 
     # ---------------------------------------------------------------------
     # Print elements associated with a physical group with specified element type
-    def printElements(self,physicalGroupTag):
+    def printElements(self):
         """
         Print the elements of the mesh that belongs to the given physical group
-
-        Parameters:
-        - fileName:         name of the file to print the elements connectivity
-        - dim:              dimension of the problem (2 = 2D, 3 = 3D)
-        - physicalGroupTag: tag of the physical group which you desire to print the nodes
-        - elementType.      id of the element type of the mesh
-        - gmsh:             Gmsh data structure
-
         """
 
-        # Get the name of the physical group
-        physicalGroupName = self.gmsh.model.getPhysicalName(self.dim, physicalGroupTag)
+        for physicalGroupTag in self.cellPhysicalGroups:
 
-        # Get the entities tags associated with this physical group
-        entitiesTags = self.gmsh.model.getEntitiesForPhysicalGroup(self.dim,physicalGroupTag)
+            # Get the name of the physical group
+            physicalGroupName = self.gmsh.model.getPhysicalName(self.dim, physicalGroupTag)
 
-        # Get the element types present in the physical group with the specified dimension
-        elemTypes = []
-        for entityTag in entitiesTags:
-            entityElemTypes = self.gmsh.model.mesh.getElementTypes(self.dim, entityTag)
-            elemTypes.extend(entityElemTypes)
-        elemTypes = list(set(elemTypes))
+            # Get the entities tags associated with this physical group
+            entitiesTags = self.gmsh.model.getEntitiesForPhysicalGroup(self.dim,physicalGroupTag)
 
-        # Print the elements of the specified element type 
-        with open(self.fileName, 'a') as file:
-            for elemType in elemTypes:
-                gemaElement = gmsh2GeMA_elementTypes[elemType]
-                file.write("\n")
-                file.write(f"-- Mesh {gemaElement} elements of {physicalGroupName}\n")
-                file.write("\n")
-                file.write(f"local {gemaElement}_{physicalGroupName} = {{\n")
-                for e in entitiesTags:
-                    _, elem = self.gmsh.model.mesh.getElementsByType(elemType, e)
-                    elem = elem.reshape((-1,elemType+1))
-                    for i, connectivity in enumerate(elem, start=1):
-                        file.write("    {")
-                        file.write(", ".join(str(node) for node in connectivity))
-                        file.write("},\n")
-                file.write("}\n")
-                # Add the elements to the meshData
-                file.write(f"\nmeshData['{gemaElement}_{physicalGroupName}'] = {gemaElement}_{physicalGroupName}\n")
+            # Get the element types present in the physical group with the specified dimension
+            elemTypes = []
+            for entityTag in entitiesTags:
+                entityElemTypes = self.gmsh.model.mesh.getElementTypes(self.dim, entityTag)
+                elemTypes.extend(entityElemTypes)
+            elemTypes = list(set(elemTypes))
+
+            # Print the elements of the specified element type 
+            with open(self.fileName, 'a') as file:
+                for elemType in elemTypes:
+                    gemaElement = gmsh2GeMA_elementTypes[elemType]
+                    file.write("\n")
+                    file.write(f"-- Mesh {gemaElement} elements of {physicalGroupName}\n")
+                    file.write("\n")
+                    file.write(f"local {gemaElement}_{physicalGroupName} = {{\n")
+                    for e in entitiesTags:
+                        _, elem = self.gmsh.model.mesh.getElementsByType(elemType, e)
+                        elem = elem.reshape((-1,elemType+1))
+                        for i, connectivity in enumerate(elem, start=1):
+                            file.write("    {")
+                            file.write(", ".join(str(node) for node in connectivity))
+                            file.write("},\n")
+                    file.write("}\n")
+                    # Add the elements to the meshData
+                    file.write(f"\nmeshData['{gemaElement}_{physicalGroupName}'] = {gemaElement}_{physicalGroupName}\n")
 
 
     # ---------------------------------------------------------------------
     # Print nodes associated with a physical group     
-    def printNodeSetDataList(self,dimPhysicalGroup,physicalGroupTag):
+    def printNodeSetDataList(self):
         """
         Print the list of nodes of the mesh that belongs to the given physical group
 
@@ -155,27 +182,29 @@ class gemaMesh:
 
         """
 
-        # Get the name of the physical group
-        physicalGroupName = self.gmsh.model.getPhysicalName(dimPhysicalGroup, physicalGroupTag)
+        for dimPhysicalGroup,physicalGroupTag in self.nodeSetData:
 
-        # Get the entities tags associated with this physical group
-        entitiesTags = self.gmsh.model.getEntitiesForPhysicalGroup(dimPhysicalGroup,physicalGroupTag)
+            # Get the name of the physical group
+            physicalGroupName = self.gmsh.model.getPhysicalName(dimPhysicalGroup, physicalGroupTag)
 
-        # Print the elements of the specified element type 
-        with open(self.fileName, 'a') as file:
-            file.write("\n")
-            file.write(f"-- Node list of {physicalGroupName}\n")
-            file.write("\n")
-            file.write(f"local nodeList_{physicalGroupName} = {{\n")
-            for e in entitiesTags:
-                nodeTags = self.gmsh.model.mesh.getNodes(dimPhysicalGroup,e)
-                for node in nodeTags[0]:
-                    file.write("    ")
-                    file.write(f" {node},\n")
-            file.write("}\n")
+            # Get the entities tags associated with this physical group
+            entitiesTags = self.gmsh.model.getEntitiesForPhysicalGroup(dimPhysicalGroup,physicalGroupTag)
 
-            # Add the node list to the meshData
-            file.write(f"\nmeshData['nodeList_{physicalGroupName}'] = nodeList_{physicalGroupName}\n")
+            # Print the elements of the specified element type 
+            with open(self.fileName, 'a') as file:
+                file.write("\n")
+                file.write(f"-- Node list of {physicalGroupName}\n")
+                file.write("\n")
+                file.write(f"local nodeList_{physicalGroupName} = {{\n")
+                for e in entitiesTags:
+                    nodeTags = self.gmsh.model.mesh.getNodes(dimPhysicalGroup,e)
+                    for node in nodeTags[0]:
+                        file.write("    ")
+                        file.write(f" {node},\n")
+                file.write("}\n")
+
+                # Add the node list to the meshData
+                file.write(f"\nmeshData['nodeList_{physicalGroupName}'] = nodeList_{physicalGroupName}\n")
 
 
     # ---------------------------------------------------------------------

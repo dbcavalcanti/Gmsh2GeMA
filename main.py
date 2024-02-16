@@ -177,35 +177,20 @@ m.writeModelFile()
 
 # # ===  MESH EXPORTATION TO GEMA ========================================
 
+# Initialize the mesh object
 mesh = gemaMesh(problemName,dim,gmsh)
-
-# Create the file
-mesh.openMeshFile()
-
-#Print the nodes
-mesh.printNodes(meshDomain)
-
-# Print the elements associated with each physical group
-mesh.printElements(basalAquiferPG)
-mesh.printElements(lowerCapRockPG)
-mesh.printElements(reservoirPG)
-mesh.printElements(upperCapRockPG)
-mesh.printElements(upperAquiferPG)
 
 # Create interface elements
 interfaceElements = mesh.createInterfaceElements(faultPG)
 
-# Print the interface elements
-mesh.printInterfaceElements(interfaceElements,faultPG)
+# Assign the physical groups to mesh entities
+mesh.setNodesPhysicalGroup(meshDomain)
+mesh.setCellPhysicalGroup([basalAquiferPG,lowerCapRockPG,reservoirPG,upperCapRockPG,upperAquiferPG])
+mesh.setNodeSetData([(1, bottomBorderPG),(1, leftBorderPG),(1, rightBorderPG),(0, injPointPG)])
+mesh.setDiscontinuitySet(interfaceElements,faultPG)
 
-# Print the node list 
-mesh.printNodeSetDataList(1, bottomBorderPG)
-mesh.printNodeSetDataList(1, leftBorderPG)
-mesh.printNodeSetDataList(1, rightBorderPG)
-mesh.printNodeSetDataList(0, injPointPG)
-
-# Close the mesh file
-mesh.closeMeshFile()
+# Write the mesh file
+mesh.writeMeshFile()
 
 # Launch the GUI to see the results:
 gmsh.fltk.run()
