@@ -14,7 +14,7 @@
 #   Control, 5(2), 336-346. https://doi.org/10.1016/j.ijggc.2010.08.005
 #
 # ------------------------------------------------------------------------------
-
+import os
 import numpy as np
 import gmsh
 import gemaModel.mesh.auxMeshProcess as aux
@@ -23,6 +23,16 @@ from gemaModel.physics.physicsGeMA_HydroMechanical import physicsGeMA_hydromecha
 from gemaModel.modelGeMA import modelGeMA
 from gemaModel.mesh.meshGeMA import gemaMesh
 from problemMaterials import problemMaterials
+
+# ===  FOLDER NAME =============================================================
+
+# Define the folder name
+folder_name = "gemaFiles"
+
+# Check if the folder exists
+if not os.path.exists(folder_name):
+    # Create the folder
+    os.makedirs(folder_name)
 
 # ===  PROBLEM NAME ===========================================================
 
