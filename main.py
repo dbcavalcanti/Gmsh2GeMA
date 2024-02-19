@@ -24,6 +24,10 @@ from gemaModel.modelGeMA import modelGeMA
 from gemaModel.mesh.meshGeMA import gemaMesh
 from problemMaterials import problemMaterials
 
+# ===  PROBLEM NAME ===========================================================
+
+problemName = "Cappa2011"
+
 # ===  FOLDER NAME =============================================================
 
 # Define the folder name
@@ -33,10 +37,6 @@ folder_name = "gemaFiles"
 if not os.path.exists(folder_name):
     # Create the folder
     os.makedirs(folder_name)
-
-# ===  PROBLEM NAME ===========================================================
-
-problemName = "Cappa2011"
 
 # ===  INITIALIZE GMSH ====================================================
 
