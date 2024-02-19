@@ -9,6 +9,7 @@ class gemaMesh:
         self.description                    = 'Mesh discretization'
         self.coordinateUnits                = 'm'
         self.dim                            = _dim
+        self.thickness                      = 1.0
         self.stateVariables                 = _stateVariables
         self.nodeData                       = _nodeData
         self.cellData                       = _cellData
@@ -18,6 +19,7 @@ class gemaMesh:
         self.discontinuitySet               = []
         self.nodesPhysicalGroup             = []
         self.cellPhysicalGroups             = []
+        self.cellMaterials                  = []
         self.discontinuitySetPhysicalGroup  = []
         self.cellGroups                     = []
         self.elementTypes                   = []
@@ -33,8 +35,9 @@ class gemaMesh:
         self.nodesPhysicalGroup = _nodesPhysicalGroup
 
     # ---------------------------------------------------------------------
-    def setCellPhysicalGroup(self, _cellPhysicalGroups):
-        self.cellPhysicalGroups = _cellPhysicalGroups
+    def setCellPhysicalGroup(self, _cellData):
+        self.cellPhysicalGroups = _cellData
+            
 
     # ---------------------------------------------------------------------
     def setNodeSetData(self, _nodeSetData):
@@ -53,6 +56,10 @@ class gemaMesh:
     # ---------------------------------------------------------------------
     def setCoordinateUnits(self, _units):
         self.coordinateUnits = _units
+
+    # ---------------------------------------------------------------------
+    def setThickness(self, _thickness):
+        self.thickness = _thickness
         
     # ---------------------------------------------------------------------    
     def setTypeName(self, _typeName):
@@ -61,6 +68,21 @@ class gemaMesh:
     # ---------------------------------------------------------------------   
     def setId(self, _id):
         self.id = _id
+
+    # ---------------------------------------------------------------------   
+    def getElementTypes(self):
+
+        elemTypes = []
+        for physicalGroupTag in self.cellPhysicalGroups:
+
+            # Get the entities tags associated with this physical group
+            entitiesTags = self.gmsh.model.getEntitiesForPhysicalGroup(self.dim,physicalGroupTag)
+
+            # Get the element types present in the physical group with the specified dimension
+            for entityTag in entitiesTags:
+                entityElemTypes = self.gmsh.model.mesh.getElementTypes(self.dim, entityTag)
+                elemTypes.extend(entityElemTypes)
+        return list(set(elemTypes))
 
     # ---------------------------------------------------------------------
     def writeMeshFile(self):
@@ -313,16 +335,17 @@ class gemaMesh:
         physicalGroupName = self.gmsh.model.getPhysicalName(1, physicalGroupTag)
 
         # Print the elements of the specified element type 
+        #TODO: generalize to other types of interface elements + XFEM
         with open(self.fileName, 'a') as file:
             file.write("\n")
             file.write(f"-- Mesh elements of {physicalGroupName}\n")
             file.write("\n")
-            file.write(f"local int2dl4_element_{physicalGroupName} = {{\n")
+            file.write(f"local int2dl4_{physicalGroupName} = {{\n")
             for i, elem in enumerate(interfaceElements, start=1):
                 file.write(f"    {{ {elem[0]}, {elem[1]}, {elem[2]}, {elem[3]} }}, -- {i}\n")
             file.write("}\n")
 
             # Add the node list to the meshData
-            file.write(f"\nmeshData['int2dl4_element_{physicalGroupName}'] = int2dl4_element_{physicalGroupName}\n")
+            file.write(f"\nmeshData['int2dl4_{physicalGroupName}'] = int2dl4_{physicalGroupName}\n")
             
 

@@ -99,27 +99,25 @@ children_fault             = m[5]
 #    children_surf[:][0] is the dimension of the entity. In this case is 2 since is a surface
 #    children_surf[:][1] is the tag of the child entity. 
 new_surfBasalAquifer = [surf_i[1] for surf_i in children_surfBasalAquifer]
-new_surfLowerCapRock = [surf_i[1] for surf_i in children_surfLowerCapRock]
+new_surfCapRock      = [surf_i[1] for surf_i in (children_surfLowerCapRock+children_surfUpperCapRock)]
 new_surfReservoir    = [surf_i[1] for surf_i in children_surfReservoir]
-new_surfUpperCapRock = [surf_i[1] for surf_i in children_surfUpperCapRock]
 new_surfUpperAquifer = [surf_i[1] for surf_i in children_surfUpperAquifer]
 
 # Get the children lines
 new_fault = [line_i[1] for line_i in children_fault]
 
 # Create a list with all the surfaces
-all_surfaces = new_surfBasalAquifer + new_surfLowerCapRock + new_surfReservoir + new_surfUpperCapRock + new_surfUpperAquifer
+all_surfaces = new_surfBasalAquifer + new_surfCapRock + new_surfReservoir + new_surfUpperAquifer
 
 # Set here the surfaces that will compose the mesh domain
 meshDomain = gmsh.model.addPhysicalGroup(dim, all_surfaces, name='ContinuumDomain')
 
 # Define additional physical groups to set the materials
-basalAquiferPG = gmsh.model.addPhysicalGroup(dim,   new_surfBasalAquifer, name='BasalAquifer')
-lowerCapRockPG = gmsh.model.addPhysicalGroup(dim,   new_surfLowerCapRock, name='LowerCapRock')
-reservoirPG    = gmsh.model.addPhysicalGroup(dim,   new_surfReservoir,    name='Reservoir')
-upperCapRockPG = gmsh.model.addPhysicalGroup(dim,   new_surfUpperCapRock, name='UpperCapRock')
-upperAquiferPG = gmsh.model.addPhysicalGroup(dim,   new_surfUpperAquifer, name='UpperAquifer')
-faultPG        = gmsh.model.addPhysicalGroup(dim-1, new_fault,            name='Fault')
+basalAquiferPG = gmsh.model.addPhysicalGroup(dim,   new_surfBasalAquifer, name='basalAquifer')
+capRockPG      = gmsh.model.addPhysicalGroup(dim,   new_surfCapRock,      name='capRock')
+reservoirPG    = gmsh.model.addPhysicalGroup(dim,   new_surfReservoir,    name='reservoir')
+upperAquiferPG = gmsh.model.addPhysicalGroup(dim,   new_surfUpperAquifer, name='upperAquifer')
+faultPG        = gmsh.model.addPhysicalGroup(dim-1, new_fault,            name='fault')
 
 # ===  DEFINITION OF PHYSICAL GROUPS FOR BOUNDARY CONDITIONS =====================
 
@@ -189,11 +187,20 @@ mesh = gemaMesh(problemName,dim,gmsh)
 # Create interface elements
 interfaceElements = mesh.createInterfaceElements(faultPG)
 
-# Assign the physical groups to mesh entities
+# Assign domain physical group to the nodes
 mesh.setNodesPhysicalGroup(meshDomain)
-mesh.setCellPhysicalGroup([basalAquiferPG,lowerCapRockPG,reservoirPG,upperCapRockPG,upperAquiferPG])
-mesh.setNodeSetData([(1, bottomBorderPG),(1, leftBorderPG),(1, rightBorderPG),(0, injPointPG)])
+
+# Set the materials and physical groups to the mesh
+mesh.setCellPhysicalGroup([basalAquiferPG,capRockPG,reservoirPG,upperAquiferPG])
+
+# Set the physical groups to the node sets
+mesh.setNodeSetData([( 1, bottomBorderPG),(1, leftBorderPG),(1, rightBorderPG),(0, injPointPG)])
+
+# Set the physical group to the interface elements
 mesh.setDiscontinuitySet(interfaceElements,faultPG)
+
+# Add the mesh to the model
+model.setMesh(mesh)
 
 # === WRITE FILES TO GEMA ========================================
 

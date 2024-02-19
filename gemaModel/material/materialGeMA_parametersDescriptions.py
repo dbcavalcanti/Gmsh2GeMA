@@ -14,7 +14,7 @@ parameter_descriptions = {
     'rhob': 'Bulk density',
     'Kn': 'Normal elastic stiffness',
     'Ks': 'Shear elastic stiffness',
-    'Cf': 'Faul cohesion',
+    'Cf': 'Fault cohesion',
     'Phif': 'Fault friction angle',
     'Psif': 'Fault dilation angle',
     'Tcut': 'Tension Cut-off',

@@ -3,7 +3,7 @@ from gemaModel.physics.physicsGeMA import physicsGeMA
 class physicsGeMA_hydromechanical(physicsGeMA):
     def __init__(self, _analysisType):
         super().__init__('CoupledHM', _analysisType)
-        self.stateVariables = ['u','p']
+        self.stateVariables = ['u','P']
         self.name = self.setName(_analysisType)
 
     def setName(self, _analysisType):
