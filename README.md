@@ -6,7 +6,7 @@ The main.py file:
   3) Create physical groups:
       -   At least one physical group should be created;
       -   A physical group named meshDomain with all surfaces/volumes of the model should be created;
-      -   The physical groups will be used to define node set to apply boundary conditions;
+      -   The physical groups will be used to define node sets to apply boundary conditions;
       -   The physical groups will be used to apply the materials to the model;
   4)   Assign the physical groups to the nodes, cell and node sets;
   5)   Define the boundary conditions.
