@@ -45,7 +45,6 @@ class boundaryConditionsGema:
 
             file.write('  properties = {\n')
             for param in self.parametersId:
-                print(bcVariables[param]['description'])
                 file.write(f"    {{id = \'{param}\'")
                 file.write(f",  description = \'{bcVariables[param]['description']}\'")
                 file.write(f",  unit = \'{bcVariables[param]['unit']}\'")
