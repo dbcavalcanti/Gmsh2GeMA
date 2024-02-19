@@ -14,5 +14,5 @@ The main.py file:
 *The name of the physical groups must correspond to the names of the materials in problemMaterials.py
 
 The problemMaterials.py:
-  - This file consist in a dictionary with all materials parameters values;
+  - This file consist in a dictionary with all material parameter values;
   - It must have a final dictionary that gather all materials. The names of the ids in the dictionary, must correspond with the names given to the physical groups.
