@@ -1,3 +1,10 @@
+# ------------------------------------------------------------------------------
+#
+# Author: Danilo Cavalcanti
+# February 2024
+#
+# ------------------------------------------------------------------------------
+
 class physicsGeMA:
     def __init__(self, _id = 'none', _analysisType = 'none'):
         self.availablePhysics       = ['Mechanical','Hydro','CoupledHM','CoupledTM']

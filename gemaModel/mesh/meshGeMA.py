@@ -1,3 +1,10 @@
+# ------------------------------------------------------------------------------
+#
+# Author: Danilo Cavalcanti
+# February 2024
+#
+# ------------------------------------------------------------------------------
+
 import numpy as np
 from gemaModel.mesh.gmsh2GeMA_ElementTypes import gmsh2GeMA_elementTypes
 

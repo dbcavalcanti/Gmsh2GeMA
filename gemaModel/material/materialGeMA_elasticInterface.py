@@ -1,3 +1,10 @@
+# ------------------------------------------------------------------------------
+#
+# Author: Danilo Cavalcanti
+# February 2024
+#
+# ------------------------------------------------------------------------------
+
 from gemaModel.material.materialGeMA import materialGeMA
 
 class materialGema_elasticInterface(materialGeMA):

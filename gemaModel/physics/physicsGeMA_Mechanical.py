@@ -1,3 +1,10 @@
+# ------------------------------------------------------------------------------
+#
+# Author: Danilo Cavalcanti
+# February 2024
+#
+# ------------------------------------------------------------------------------
+
 from gemaModel.physics.physicsGeMA import physicsGeMA
 
 class physicsGeMA_mechanical(physicsGeMA):

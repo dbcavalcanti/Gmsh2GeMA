@@ -1,9 +1,20 @@
+# ------------------------------------------------------------------------------
+#
+# Author: Danilo Cavalcanti
+# February 2024
+#
+# ------------------------------------------------------------------------------
+
 from gemaModel.material.materialGeMA_elastic import materialGema_elastic
 from gemaModel.material.materialGeMA_poroElastic import materialGema_poroElastic
 from gemaModel.material.materialGeMA_elasticInterface import materialGema_elasticInterface
 from gemaModel.material.materialGeMA_poroInterfaceMC import materialGema_poroInterfaceMC
 from gemaModel.material.materialGeMA_parametersDescriptions import parameter_descriptions
 from gemaModel.material.materialGeMA_parametersUnits import parameter_units
+from gemaModel.boundaryConditions.boundaryConditionGeMA_NodeDisplacement import boundaryConditionsGema_NodeDisplacement
+from gemaModel.boundaryConditions.boundaryConditionGeMA_NodeConcentratedForce import boundaryConditionsGema_NodeConcentratedForce
+from gemaModel.boundaryConditions.boundaryConditionGeMA_NodePorePressure import boundaryConditionsGema_NodePorePressure
+from gemaModel.boundaryConditions.boundaryConditionGeMA_NodePoreFlow import boundaryConditionsGema_NodePoreFlow
 from gemaModel.mesh.gmsh2GeMA_ElementTypes import gmsh2GeMA_elementTypes
 from gemaModel.mesh.gema_IntegrationRules import gema_elementIntegrationRules
 
@@ -20,6 +31,7 @@ class modelGeMA:
         self.mesh                      = []
         self.cellGroups                = []
         self.boundaryConditions        = []
+        self.numBoundaryConditions     = 0
         self.matParametersDescriptions = parameter_descriptions
         self.matParametersUnits        = parameter_units
         self.fileName                  = 'gemaFiles\\' + _problemName + '_model.lua'
@@ -53,8 +65,17 @@ class modelGeMA:
         self.materialsId[_materialName] = self.numMaterials
         
     # ---------------------------------------------------------------------
-    def addBoundaryCondition(self,_boundaryCondition):
-        self.boundaryConditions.append(_boundaryCondition)
+    def addBoundaryCondition(self,_boundaryConditionType,_boundaryConditionId, _bcDef):
+        if _boundaryConditionType == 'node displacements':
+            bc = boundaryConditionsGema_NodeDisplacement(_boundaryConditionId,_bcDef, self.mesh.dim)
+        elif _boundaryConditionType == 'node concentrated forces':
+            bc = boundaryConditionsGema_NodeConcentratedForce(_boundaryConditionId,_bcDef, self.mesh.dim)
+        elif _boundaryConditionType == 'node pore flow':
+            bc = boundaryConditionsGema_NodePorePressure(_boundaryConditionId,_bcDef)
+        elif _boundaryConditionType == 'node pore pressure':
+            bc = boundaryConditionsGema_NodePoreFlow(_boundaryConditionId,_bcDef)
+        self.numBoundaryConditions += 1
+        self.boundaryConditions.append(bc)
 
     # ---------------------------------------------------------------------
     def openFile(self):
@@ -103,7 +124,9 @@ class modelGeMA:
 
     # ---------------------------------------------------------------------
     def writeBoundaryConditions(self):
-        pass
+        self.writeBoundaryConditionsHeader()
+        for i in range(self.numBoundaryConditions):
+            self.boundaryConditions[i].writeBoundaryCondition(self.fileName)
 
     # ---------------------------------------------------------------------
     def writeMeshHeader(self):
@@ -256,7 +279,7 @@ class modelGeMA:
     def writeMaterialHeader(self):
 
         with open (self.fileName,'a') as file:
-            file.write('-------------------------------------------------------------\n')
+            file.write('\n-------------------------------------------------------------\n')
             file.write('--  Cell properties\n')
             file.write('-------------------------------------------------------------\n')
             file.write('PropertySet\n')
@@ -264,5 +287,12 @@ class modelGeMA:
             file.write('  id= \'MatProp\',\n')
             file.write('  typeName  = \'GemaPropertySet\',\n')
             file.write('  description = \'Material properties\',\n')
+
+    # ---------------------------------------------------------------------
+    def writeBoundaryConditionsHeader(self):
+        with open (self.fileName,'a') as file:
+            file.write('-------------------------------------------------------------\n')
+            file.write('--  Boundary conditions\n')
+            file.write('-------------------------------------------------------------\n')
 
     

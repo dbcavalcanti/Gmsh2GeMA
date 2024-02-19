@@ -202,6 +202,11 @@ mesh.setDiscontinuitySet(interfaceElements,faultPG)
 # Add the mesh to the model
 model.setMesh(mesh)
 
+# ===  BOUNDARY CONDITIONS ========================================
+
+model.addBoundaryCondition('node displacements','bcDisplacements',[([0,0],'bottomBorder'),([0,'nil'],'rightBorder'),([0,'nil'],'leftBorder')])
+model.addBoundaryCondition('node pore flow','bcDischarge',[([-2.0e-5],'injNode')])
+
 # === WRITE FILES TO GEMA ========================================
 
 # Write the mesh file
