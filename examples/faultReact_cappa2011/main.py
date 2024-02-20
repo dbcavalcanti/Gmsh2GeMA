@@ -213,9 +213,6 @@ model.addBoundaryCondition('node pore flow','bcDischarge',[([-2.0e-5],'injNode')
 mesh.writeMeshFile()
 model.writeModelFile()
 
-# Write the gmsh mesh file
-gmsh.write(problemName + ".msh")
-
 # Launch the GUI to see the results:
 gmsh.fltk.run()
 gmsh.finalize()
