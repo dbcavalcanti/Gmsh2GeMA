@@ -219,18 +219,25 @@ class gemaMesh:
             # Get the entities tags associated with this physical group
             entitiesTags = self.gmsh.model.getEntitiesForPhysicalGroup(dimPhysicalGroup,physicalGroupTag)
 
+            # Get the nodes of the physical group
+            nodes = []
+            for e in entitiesTags:
+                nodeTags = self.gmsh.model.mesh.getNodes(dimPhysicalGroup,e,True)
+                for node in nodeTags[0]:
+                    nodes.append(node)
+            nodes = list(set(nodes))
+
             # Print the elements of the specified element type 
             with open(self.fileName, 'a') as file:
                 file.write("\n")
                 file.write(f"-- Node list of {physicalGroupName}\n")
                 file.write("\n")
                 file.write(f"local nodeList_{physicalGroupName} = {{\n")
-                for e in entitiesTags:
-                    nodeTags = self.gmsh.model.mesh.getNodes(dimPhysicalGroup,e)
-                    for node in nodeTags[0]:
-                        file.write("    ")
-                        file.write(f" {node},\n")
+                for node in nodes:
+                    file.write("    ")
+                    file.write(f" {node},\n")
                 file.write("}\n")
+
 
                 # Add the node list to the meshData
                 file.write(f"\nmeshData['nodeList_{physicalGroupName}'] = nodeList_{physicalGroupName}\n")
