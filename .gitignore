@@ -2,3 +2,5 @@
 *.lua
 
 __pycache__/
+
+*.msh
