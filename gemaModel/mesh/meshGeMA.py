@@ -319,7 +319,7 @@ class gemaMesh:
                         break
 
             # Create the interface element
-            edgeInterface = [item for sublist in edgeInterface for item in sublist]
+            edgeInterface = [item for sublist in edgeInterface for item in sublist][::-1]
             interfaceElem.append(edgeInterface)
 
         return interfaceElem
