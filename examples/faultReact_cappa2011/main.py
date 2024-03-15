@@ -160,6 +160,7 @@ gmsh.model.mesh.generate(2)
 
 gmsh.plugin.setNumber("Crack", "Dimension", 1)
 gmsh.plugin.setNumber("Crack", "PhysicalGroup", faultPG)
+# gmsh.plugin.setNumber("Crack", "OpenBoundaryPhysicalGroup", faultPG)
 gmsh.plugin.run("Crack")
 
 # ===  RENUMBER THE NODES  ==============================================
@@ -212,6 +213,9 @@ model.addBoundaryCondition('node pore flow','bcDischarge',[([-2.0e-5],'injNode')
 # Write the mesh file
 mesh.writeMeshFile()
 model.writeModelFile()
+
+# Write the gmsh mesh file
+gmsh.write(problemName + ".msh")
 
 # Launch the GUI to see the results:
 gmsh.fltk.run()

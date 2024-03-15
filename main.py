@@ -17,6 +17,7 @@
 import os
 import numpy as np
 import gmsh
+import math
 import gemaModel.mesh.auxMeshProcess as aux
 from gemaModel.physics.physicsGeMA_Mechanical import physicsGeMA_mechanical
 from gemaModel.physics.physicsGeMA_HydroMechanical import physicsGeMA_hydromechanical
@@ -26,7 +27,7 @@ from problemMaterials import problemMaterials
 
 # ===  PROBLEM NAME ===========================================================
 
-problemName = "Cappa2011"
+problemName = "HydraulicTest_IntersectingX"
 
 # ===  FOLDER NAME =============================================================
 
@@ -49,37 +50,40 @@ gmsh.option.setNumber("General.Terminal", 1)
 dim = 2
 
 # Domain dimensions (m)
-Lx  = 2000.0
-Ly  = 2000.0
+Lx  = 2.0
+Ly  = 2.0
 
 # Specify the finite element type
 #    2 - linear triangles
 #    3 - linear quadrilaterals
-elementType = 3
+elementType = 2
 
 # Mesh characteristic lenght
-lc = 100.0
+lc = 2.0/61
 
 # Create the surfaces
-surfBasalAquifer = gmsh.model.occ.addRectangle(0.0,    0.0, 0.0, 2000.0, 800.0)
-surfLowerCapRock = gmsh.model.occ.addRectangle(0.0,  800.0, 0.0, 2000.0, 150.0)
-surfReservoir    = gmsh.model.occ.addRectangle(0.0,  950.0, 0.0, 2000.0, 100.0)
-surfUpperCapRock = gmsh.model.occ.addRectangle(0.0, 1050.0, 0.0, 2000.0, 150.0)
-surfUpperAquifer = gmsh.model.occ.addRectangle(0.0, 1200.0, 0.0, 2000.0, 800.0)
+surf = gmsh.model.occ.addRectangle(0.0, 0.0, 0.0, Lx, Ly)
 
-# Fault points
-pf1 = gmsh.model.occ.addPoint(323.6730193,    0.0, 0.0)
-pf2 = gmsh.model.occ.addPoint(676.3269807, 2000.0, 0.0)
+# Coordinates of the fault points
+center = Lx / 2
+xdi1 = center - math.cos(math.pi/3)*(Lx/4); xdi2 = center - math.cos(math.pi/3)*(Lx/4);
+ydi1 = center + math.sin(math.pi/3)*(Lx/4); ydi2 = center - math.sin(math.pi/3)*(Lx/4);
+xdf1 = center + math.cos(math.pi/3)*(Lx/4); xdf2 = center + math.cos(math.pi/3)*(Lx/4);
+ydf1 = center - math.sin(math.pi/3)*(Lx/4); ydf2 = center + math.sin(math.pi/3)*(Lx/4);
+
+# Discontinuity points
+pf1 = gmsh.model.occ.addPoint(xdi1, ydi1, 0.0)
+pf2 = gmsh.model.occ.addPoint(xdf1, ydf1, 0.0)
+pf3 = gmsh.model.occ.addPoint(xdi2, ydi2, 0.0)
+pf4 = gmsh.model.occ.addPoint(xdf2, ydf2, 0.0)
 
 # Fault
-fault = gmsh.model.occ.addLine(pf1, pf2)
-
-# Injection point
-injPoint = gmsh.model.occ.addPoint(0.0, 1000.0, 0.0)
+d1 = gmsh.model.occ.addLine(pf1, pf2)
+d2 = gmsh.model.occ.addLine(pf3, pf4)
 
 # Create a division of the surface/volume based on the intersections with
 # given lower entities.
-o, m = gmsh.model.occ.fragment([(2, surfBasalAquifer),(2, surfLowerCapRock),(2, surfReservoir),(2, surfUpperCapRock),(2, surfUpperAquifer)], [(1, fault),(0,injPoint)])
+o, m = gmsh.model.occ.fragment([(2, surf)], [(1, d1),(1, d2)])
 
 # Synchronize the model
 gmsh.model.occ.synchronize()
@@ -88,44 +92,35 @@ gmsh.model.occ.synchronize()
 
 # Get the children entities. The order that they are listed in "m" is the same that
 # they were passed as inputs in the fragmentation function.
-children_surfBasalAquifer  = m[0]
-children_surfLowerCapRock  = m[1]
-children_surfReservoir     = m[2]
-children_surfUpperCapRock  = m[3]
-children_surfUpperAquifer  = m[4]
-children_fault             = m[5]
+children_surf  = m[0]
+children_d1    = m[1]
+children_d2    = m[2]
 
 # Get the children surfaces
 #    children_surf[:][0] is the dimension of the entity. In this case is 2 since is a surface
 #    children_surf[:][1] is the tag of the child entity. 
-new_surfBasalAquifer = [surf_i[1] for surf_i in children_surfBasalAquifer]
-new_surfCapRock      = [surf_i[1] for surf_i in (children_surfLowerCapRock+children_surfUpperCapRock)]
-new_surfReservoir    = [surf_i[1] for surf_i in children_surfReservoir]
-new_surfUpperAquifer = [surf_i[1] for surf_i in children_surfUpperAquifer]
+all_surfaces = [surf_i[1] for surf_i in children_surf]
 
 # Get the children lines
-new_fault = [line_i[1] for line_i in children_fault]
-
-# Create a list with all the surfaces
-all_surfaces = new_surfBasalAquifer + new_surfCapRock + new_surfReservoir + new_surfUpperAquifer
+new_d1 = [line_i[1] for line_i in children_d1]
+new_d2 = [line_i[1] for line_i in children_d2]
+new_d = new_d1 + new_d2
 
 # Set here the surfaces that will compose the mesh domain
 meshDomain = gmsh.model.addPhysicalGroup(dim, all_surfaces, name='ContinuumDomain')
 
 # Define additional physical groups to set the materials
-basalAquiferPG = gmsh.model.addPhysicalGroup(dim,   new_surfBasalAquifer, name='basalAquifer')
-capRockPG      = gmsh.model.addPhysicalGroup(dim,   new_surfCapRock,      name='capRock')
-reservoirPG    = gmsh.model.addPhysicalGroup(dim,   new_surfReservoir,    name='reservoir')
-upperAquiferPG = gmsh.model.addPhysicalGroup(dim,   new_surfUpperAquifer, name='upperAquifer')
-faultPG        = gmsh.model.addPhysicalGroup(dim-1, new_fault,            name='fault')
+faultPG   = gmsh.model.addPhysicalGroup(dim-1, new_d,           name='fault1')
+fault1PG  = gmsh.model.addPhysicalGroup(dim-1, new_d1,           name='fault1')
+fault2PG  = gmsh.model.addPhysicalGroup(dim-1, new_d2,           name='fault2')
 
 # ===  DEFINITION OF PHYSICAL GROUPS FOR BOUNDARY CONDITIONS =====================
 
 # Get the boundary lines of the domain
-bottomBorder = aux.getBoundaryLines(new_surfBasalAquifer,gmsh,np.array([0.0, -1.0, 0.0]))
-topBorder    = aux.getBoundaryLines(new_surfUpperAquifer,gmsh,np.array([ 0.0, 1.0, 0.0]))
-leftBorder   = aux.getBoundaryLines(all_surfaces,        gmsh,np.array([-1.0, 0.0, 0.0]))
-rightBorder  = aux.getBoundaryLines(all_surfaces,        gmsh,np.array([ 1.0, 0.0, 0.0]))
+bottomBorder = aux.getBoundaryLines(all_surfaces, gmsh,np.array([0.0, -1.0, 0.0]))
+topBorder    = aux.getBoundaryLines(all_surfaces, gmsh,np.array([ 0.0, 1.0, 0.0]))
+leftBorder   = aux.getBoundaryLines(all_surfaces, gmsh,np.array([-1.0, 0.0, 0.0]))
+rightBorder  = aux.getBoundaryLines(all_surfaces, gmsh,np.array([ 1.0, 0.0, 0.0]))
 
 # Create the physical groups to apply the boundary conditions on the borders
 bottomBorderPG = gmsh.model.addPhysicalGroup( 1, bottomBorder, name='bottomBorder')
@@ -133,11 +128,24 @@ topBorderPG    = gmsh.model.addPhysicalGroup( 1, topBorder,    name='topBorder')
 leftBorderPG   = gmsh.model.addPhysicalGroup( 1, leftBorder,   name='leftBorder')
 rightBorderPG  = gmsh.model.addPhysicalGroup( 1, rightBorder,  name='rightBorder')
 
-# Create the physical groups to apply the boundary conditions on a specific node
-injPointPG = gmsh.model.addPhysicalGroup( 0, [injPoint], name='injNode')
-
 # ===  MESH CONFIGURATION =========================================================
 
+gmsh.model.mesh.field.add("Distance", 1)
+gmsh.model.mesh.field.setNumbers(1, "CurvesList", new_d)
+gmsh.model.mesh.field.setNumber(1, "Sampling", 50)
+
+gmsh.model.mesh.field.add("Threshold", 2)
+gmsh.model.mesh.field.setNumber(2, "InField", 1)
+gmsh.model.mesh.field.setNumber(2, "SizeMin", lc / 2)
+gmsh.model.mesh.field.setNumber(2, "SizeMax", lc)
+gmsh.model.mesh.field.setNumber(2, "DistMin", 0.01*Lx)
+gmsh.model.mesh.field.setNumber(2, "DistMax", 0.05*Lx)
+
+# Let's use the minimum of all the fields as the mesh size field:
+gmsh.model.mesh.field.add("Min", 3)
+gmsh.model.mesh.field.setNumbers(3, "FieldsList", [2])
+
+gmsh.model.mesh.field.setAsBackgroundMesh(3)
 # Set the mesh size
 gmsh.model.mesh.setSize(gmsh.model.getEntities(0), lc)
 
@@ -153,19 +161,21 @@ gmsh.option.setNumber('Mesh.SurfaceFaces', 1)
 gmsh.option.setNumber('Mesh.Points', 1)
 
 # Generate the mesh
-gmsh.option.setNumber("Mesh.Algorithm", 1)
+gmsh.option.setNumber("Mesh.Algorithm", 6)
 gmsh.model.mesh.generate(2)
 
 # ===  DUPLICATE NODES ALONG THE FAULT ===================================
 
 gmsh.plugin.setNumber("Crack", "Dimension", 1)
-gmsh.plugin.setNumber("Crack", "PhysicalGroup", faultPG)
+gmsh.plugin.setNumber("Crack", "PhysicalGroup", fault1PG)
+gmsh.plugin.run("Crack")
+gmsh.plugin.setNumber("Crack", "PhysicalGroup", fault2PG)
 gmsh.plugin.run("Crack")
 
 # ===  RENUMBER THE NODES  ==============================================
 
-old, new = gmsh.model.mesh.computeRenumbering('RCMK')
-gmsh.model.mesh.renumberNodes(old, new)
+# old, new = gmsh.model.mesh.computeRenumbering('RCMK')
+# gmsh.model.mesh.renumberNodes(old, new)
 
 # ===  MATERIALS AND PHYSICS DEFINITION =================================
 
@@ -191,10 +201,10 @@ interfaceElements = mesh.createInterfaceElements(faultPG)
 mesh.setNodesPhysicalGroup(meshDomain)
 
 # Set the materials and physical groups to the mesh
-mesh.setCellPhysicalGroup([basalAquiferPG,capRockPG,reservoirPG,upperAquiferPG])
+mesh.setCellPhysicalGroup([meshDomain])
 
 # Set the physical groups to the node sets
-mesh.setNodeSetData([( 1, bottomBorderPG),(1, leftBorderPG),(1, rightBorderPG),(0, injPointPG)])
+mesh.setNodeSetData([( 1, topBorderPG),( 1, bottomBorderPG),(1, leftBorderPG),(1, rightBorderPG)])
 
 # Set the physical group to the interface elements
 mesh.setDiscontinuitySet(interfaceElements,faultPG)
@@ -205,13 +215,12 @@ model.setMesh(mesh)
 # ===  BOUNDARY CONDITIONS ========================================
 
 model.addBoundaryCondition('node displacements','bcDisplacements',[([0,0],'bottomBorder'),([0,'nil'],'rightBorder'),([0,'nil'],'leftBorder')])
-model.addBoundaryCondition('node pore flow','bcDischarge',[([-2.0e-5],'injNode')])
 
 # === WRITE FILES TO GEMA ========================================
 
 # Write the mesh file
 mesh.writeMeshFile()
-model.writeModelFile()
+# model.writeModelFile()
 
 # Write the gmsh mesh file
 gmsh.write(problemName + ".msh")

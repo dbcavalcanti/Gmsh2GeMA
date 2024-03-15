@@ -60,7 +60,7 @@ Ly  = 2000.0
 Lz  = 1000.0
 
 # Number of fractures
-nf = 20
+nf = 100
 
 # Generate random lines
 lines = generateRandomLinesGmsh(Lx, Ly, nf)

@@ -101,6 +101,7 @@ problemMaterials = {
     'capRock': capRock_params,
     'upperAquifer': upperAquifer_params,
     'basalAquifer': basalAquifer_params,
-    'fault': faultAquifer_params,
+    'fault1': faultAquifer_params,
+    'fault2': faultAquifer_params,
     'faultReservoirCapRock': faultReservoirCapRock_params
 }

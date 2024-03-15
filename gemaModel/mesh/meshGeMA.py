@@ -245,7 +245,7 @@ class gemaMesh:
 
     # ---------------------------------------------------------------------
     # Create 2D zero-thickness double-node interface elements
-    def createInterfaceElements(self,discontinuitySet):
+    def createInterfaceElements(self,discontinuitySet, tripleNode = False):
 
         # Get the nodes of the continuum domain
         _, nodeCoords,_ = self.gmsh.model.mesh.getNodes()
