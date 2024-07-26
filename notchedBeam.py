@@ -56,71 +56,36 @@ Ly  = 0.10
 # Specify the finite element type
 #    2 - linear triangles
 #    3 - linear quadrilaterals
-elementType = 2
+elementType = 3
 
 # Mesh characteristic lenght
 lc = 0.01
 
 # Create the surfaces
-surf = gmsh.model.occ.addRectangle(0.0, 0.0, 0.0, Lx, Ly)
-
-# Coordinates of the fault points
-center = Lx / 2
-xdi1 = center - math.cos(math.pi/3)*(Lx/4); xdi2 = center - math.cos(math.pi/3)*(Lx/4);
-ydi1 = center + math.sin(math.pi/3)*(Lx/4); ydi2 = center - math.sin(math.pi/3)*(Lx/4);
-xdf1 = center + math.cos(math.pi/3)*(Lx/4); xdf2 = center + math.cos(math.pi/3)*(Lx/4);
-ydf1 = center - math.sin(math.pi/3)*(Lx/4); ydf2 = center + math.sin(math.pi/3)*(Lx/4);
+surf1 = gmsh.model.occ.addRectangle(0.0, 0.0, 0.0, Lx, 0.02)
+surf2 = gmsh.model.occ.addRectangle(0.0, 0.02, 0.0, Lx, Ly-0.02)
+surf = [surf1,surf2]
 
 # Discontinuity points
-pf1 = gmsh.model.occ.addPoint(xdi1, ydi1, 0.0)
-pf2 = gmsh.model.occ.addPoint(xdf1, ydf1, 0.0)
-pf3 = gmsh.model.occ.addPoint(xdi2, ydi2, 0.0)
-pf4 = gmsh.model.occ.addPoint(xdf2, ydf2, 0.0)
-
-# Fault
+pf1 = gmsh.model.occ.addPoint(Lx/2.0, 0.0, 0.0)
+pf2 = gmsh.model.occ.addPoint(Lx/2.0, Ly, 0.0)
 d1 = gmsh.model.occ.addLine(pf1, pf2)
-d2 = gmsh.model.occ.addLine(pf3, pf4)
-
-# Create a division of the surface/volume based on the intersections with
-# given lower entities.
-o, m = gmsh.model.occ.fragment([(2, surf)], [(1, d1),(1, d2)])
 
 # Synchronize the model
 gmsh.model.occ.synchronize()
 
-# ===  DEFINITION OF THE PHYSICAL GROUPS FOR MATERIALS  ==================================
-
-# Get the children entities. The order that they are listed in "m" is the same that
-# they were passed as inputs in the fragmentation function.
-children_surf  = m[0]
-children_d1    = m[1]
-children_d2    = m[2]
-
-# Get the children surfaces
-#    children_surf[:][0] is the dimension of the entity. In this case is 2 since is a surface
-#    children_surf[:][1] is the tag of the child entity. 
-all_surfaces = [surf_i[1] for surf_i in children_surf]
-
-# Get the children lines
-new_d1 = [line_i[1] for line_i in children_d1]
-new_d2 = [line_i[1] for line_i in children_d2]
-new_d = new_d1 + new_d2
-
 # Set here the surfaces that will compose the mesh domain
-meshDomain = gmsh.model.addPhysicalGroup(dim, all_surfaces, name='ContinuumDomain')
-
-# Define additional physical groups to set the materials
-faultPG   = gmsh.model.addPhysicalGroup(dim-1, new_d,           name='fault1')
-fault1PG  = gmsh.model.addPhysicalGroup(dim-1, new_d1,           name='fault1')
-fault2PG  = gmsh.model.addPhysicalGroup(dim-1, new_d2,           name='fault2')
+beamUnderNotch = gmsh.model.addPhysicalGroup(dim, surf, name='beamUnderNotch')
+beamAboveNotch = gmsh.model.addPhysicalGroup(dim, surf, name='beamAboveNotch')
+meshDomain     = gmsh.model.addPhysicalGroup(dim, surf, name='ContinuumDomain')
 
 # ===  DEFINITION OF PHYSICAL GROUPS FOR BOUNDARY CONDITIONS =====================
 
 # Get the boundary lines of the domain
-bottomBorder = aux.getBoundaryLines(all_surfaces, gmsh,np.array([0.0, -1.0, 0.0]))
-topBorder    = aux.getBoundaryLines(all_surfaces, gmsh,np.array([ 0.0, 1.0, 0.0]))
-leftBorder   = aux.getBoundaryLines(all_surfaces, gmsh,np.array([-1.0, 0.0, 0.0]))
-rightBorder  = aux.getBoundaryLines(all_surfaces, gmsh,np.array([ 1.0, 0.0, 0.0]))
+bottomBorder = aux.getBoundaryLines(surf, gmsh,np.array([0.0, -1.0, 0.0]))
+topBorder    = aux.getBoundaryLines(surf, gmsh,np.array([ 0.0, 1.0, 0.0]))
+leftBorder   = aux.getBoundaryLines(surf, gmsh,np.array([-1.0, 0.0, 0.0]))
+rightBorder  = aux.getBoundaryLines(surf, gmsh,np.array([ 1.0, 0.0, 0.0]))
 
 # Create the physical groups to apply the boundary conditions on the borders
 bottomBorderPG = gmsh.model.addPhysicalGroup( 1, bottomBorder, name='bottomBorder')
@@ -130,29 +95,13 @@ rightBorderPG  = gmsh.model.addPhysicalGroup( 1, rightBorder,  name='rightBorder
 
 # ===  MESH CONFIGURATION =========================================================
 
-gmsh.model.mesh.field.add("Distance", 1)
-gmsh.model.mesh.field.setNumbers(1, "CurvesList", new_d)
-gmsh.model.mesh.field.setNumber(1, "Sampling", 50)
-
-gmsh.model.mesh.field.add("Threshold", 2)
-gmsh.model.mesh.field.setNumber(2, "InField", 1)
-gmsh.model.mesh.field.setNumber(2, "SizeMin", lc / 2)
-gmsh.model.mesh.field.setNumber(2, "SizeMax", lc)
-gmsh.model.mesh.field.setNumber(2, "DistMin", 0.01*Lx)
-gmsh.model.mesh.field.setNumber(2, "DistMax", 0.05*Lx)
-
-# Let's use the minimum of all the fields as the mesh size field:
-gmsh.model.mesh.field.add("Min", 3)
-gmsh.model.mesh.field.setNumbers(3, "FieldsList", [2])
-
-gmsh.model.mesh.field.setAsBackgroundMesh(3)
 # Set the mesh size
 gmsh.model.mesh.setSize(gmsh.model.getEntities(0), lc)
 
 # Combine the triangles to obtain quadrilateral elements
-for surf_i in all_surfaces:
-    if elementType == 3:  # Quadrilateral element
-        gmsh.model.mesh.setRecombine(2, surf_i)
+if elementType == 3:  # Quadrilateral element
+    gmsh.model.mesh.setRecombine(2, surf1)
+    gmsh.model.mesh.setRecombine(2, surf2)
 
 # To see the faces of the elements
 gmsh.option.setNumber('Mesh.SurfaceFaces', 1)
@@ -161,30 +110,21 @@ gmsh.option.setNumber('Mesh.SurfaceFaces', 1)
 gmsh.option.setNumber('Mesh.Points', 1)
 
 # Generate the mesh
-gmsh.option.setNumber("Mesh.Algorithm", 6)
+gmsh.option.setNumber("Mesh.Algorithm", 5)
 gmsh.model.mesh.generate(2)
-
-# ===  DUPLICATE NODES ALONG THE FAULT ===================================
-
-gmsh.plugin.setNumber("Crack", "Dimension", 1)
-gmsh.plugin.setNumber("Crack", "PhysicalGroup", fault1PG)
-gmsh.plugin.run("Crack")
-gmsh.plugin.setNumber("Crack", "PhysicalGroup", fault2PG)
-gmsh.plugin.run("Crack")
 
 # ===  RENUMBER THE NODES  ==============================================
 
-# old, new = gmsh.model.mesh.computeRenumbering('RCMK')
-# gmsh.model.mesh.renumberNodes(old, new)
+old, new = gmsh.model.mesh.computeRenumbering('RCMK')
+gmsh.model.mesh.renumberNodes(old, new)
 
 # ===  MATERIALS AND PHYSICS DEFINITION =================================
 
 # Create a physics that will be used in the simulation
 gemaMec  = physicsGeMA_mechanical('PlaneStrain')
-gemaHMec = physicsGeMA_hydromechanical('PlaneStrain')
 
 # Initialize the model
-model = modelGeMA(problemName,[gemaMec,gemaHMec])
+model = modelGeMA(problemName,[gemaMec])
 
 for material in problemMaterials:
     model.addMaterial(material,problemMaterials[material])
@@ -194,20 +134,14 @@ for material in problemMaterials:
 # Initialize the mesh object
 mesh = gemaMesh(problemName,dim,gmsh)
 
-# Create interface elements
-interfaceElements = mesh.createInterfaceElements(faultPG)
-
 # Assign domain physical group to the nodes
 mesh.setNodesPhysicalGroup(meshDomain)
 
 # Set the materials and physical groups to the mesh
-mesh.setCellPhysicalGroup([meshDomain])
+mesh.setCellPhysicalGroup([meshDomain,beamUnderNotch,beamAboveNotch])
 
 # Set the physical groups to the node sets
 mesh.setNodeSetData([( 1, topBorderPG),( 1, bottomBorderPG),(1, leftBorderPG),(1, rightBorderPG)])
-
-# Set the physical group to the interface elements
-mesh.setDiscontinuitySet(interfaceElements,faultPG)
 
 # Add the mesh to the model
 model.setMesh(mesh)
