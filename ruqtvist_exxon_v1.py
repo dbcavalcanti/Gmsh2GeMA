@@ -67,7 +67,7 @@ h = problemGeometry.getModelDepthRange()
 factor = 1.1
 
 # Create the volume by extruding in the "-z" direction the top surface
-volTags = gmsh.model.occ.extrude(topSurfTags, 0, 0, -h*factor)
+# volTags = gmsh.model.occ.extrude(topSurfTags, 0, 0, -h*factor)
 
 # === VOLUME FRAGMENTATION =========================================================
 
@@ -82,14 +82,15 @@ for surf in continuumSurfList:
     contSurfTags += problemGeometry.getGmshSurfaceDimTag(surf)
 
 # Fragment the surfaces and volume with the fault surfaces
-gmsh.model.occ.fragment(faultSurfTags, contSurfTags+volTags)
+# gmsh.model.occ.fragment(faultSurfTags, contSurfTags+volTags)
+gmsh.model.occ.fragment(faultSurfTags, contSurfTags)
 
 # Syncronize and update the model
 gmsh.model.occ.synchronize()
 
 # ===  MESH GENERATION =========================================================
 
-gmsh.model.mesh.generate(3)
+gmsh.model.mesh.generate(2)
 gmsh.write(problemName+".msh")
 
 # To see the faces of the elements

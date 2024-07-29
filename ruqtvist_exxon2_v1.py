@@ -43,15 +43,24 @@ topAqSurf1     = problemGeometry.loadSurface(os.path.join(problemName_path, "Top
 topAqSurf2     = problemGeometry.loadSurface(os.path.join(problemName_path, "Top_Aquifer_patch_2.off"),"TopAqSurface1")
 topAqSurf3     = problemGeometry.loadSurface(os.path.join(problemName_path, "Top_Aquifer_patch_3.off"),"TopAqSurface2")
 faultLeftSurf  = problemGeometry.loadSurface(os.path.join(problemName_path, "Fault_Left_patch_1.off"),"FaultLeftSurface")
-# faultRightSurf = problemGeometry.loadSurface(os.path.join(problemName_path, "Fault_Right_patch_1.off"),"FaultRightSurface")
+faultRightSurf = problemGeometry.loadSurface(os.path.join(problemName_path, "Fault_Right_patch_1.off"),"FaultRightSurface")
+
+# List with each type of surface
+# continuumSurfList = [bottomSurf, bottomAqSurf1, bottomAqSurf2, bottomAqSurf3, topSurf, topAqSurf1, topAqSurf2, topAqSurf3]
+continuumSurfList = [bottomSurf,topSurf,bottomAqSurf2,topAqSurf2,topAqSurf3,topAqSurf1]
+faultSurfList     = [faultLeftSurf,faultRightSurf]
 
 # ===  INITIALIZE GMSH ====================================================
 
 gmsh.initialize()
 gmsh.option.setNumber("General.Terminal", 1)
-# gmsh.option.setNumber("Geometry.Tolerance", 1e-1)
-# gmsh.option.setNumber("Geometry.ToleranceBoolean", 1e-1)
-# gmsh.option.setNumber("Mesh.ToleranceReferenceElement", 1e-1)
+gmsh.option.setNumber("Geometry.Tolerance", 1e-1)
+gmsh.option.setNumber("Geometry.ToleranceBoolean", 1)
+gmsh.option.setNumber("Mesh.ToleranceReferenceElement", 1e-1)
+# gmsh.option.setNumber("Geometry.SnapX", 1)
+# gmsh.option.setNumber("Geometry.SnapY", 1)
+# gmsh.option.setNumber("Geometry.SnapZ", 1)
+
 
 # ===  CREATE THE GEOMETRY =====================================================
 
@@ -61,48 +70,49 @@ gmsh.model.add(problemName)
 problemGeometry.addNodesToGmshModel(gmsh)
 problemGeometry.addSurfaceToGmshModel(gmsh)
 
-# vol = problemGeometry.addVolumeBoundingBox(gmsh)
+gmsh.model.occ.synchronize()
 
-# gmsh.model.occ.removeAllDuplicates()
+# === VOLUME GENERATION =========================================================
+
+# Get the tags of top surfaces
+topSurfTags = problemGeometry.getGmshSurfaceDimTag(topSurf)
+
+# Get the depth of the model
+h = problemGeometry.getModelDepthRange()
+
+# Extension factor
+factor = 1.5
+
+# Create the volume by extruding in the "-z" direction the top surface
+volTags = gmsh.model.occ.extrude(topSurfTags, 0, 0, -h*factor)
 
 gmsh.model.occ.synchronize()
 
-# === FRAGMENTATION ===========================================================
-
-scalingFactor = 0.05
-
-# Get the tags of the surfaces associates with the continuum surfaces
-contSurfTags = problemGeometry.getGmshSurfaceDimTag(bottomSurf)
-contSurfTags += problemGeometry.getGmshSurfaceDimTag(bottomAqSurf1)
-contSurfTags += problemGeometry.getGmshSurfaceDimTag(bottomAqSurf2)
-contSurfTags += problemGeometry.getGmshSurfaceDimTag(bottomAqSurf3)
-contSurfTags += problemGeometry.getGmshSurfaceDimTag(topSurf)
-contSurfTags += problemGeometry.getGmshSurfaceDimTag(topAqSurf1)
-contSurfTags += problemGeometry.getGmshSurfaceDimTag(topAqSurf2)
-contSurfTags += problemGeometry.getGmshSurfaceDimTag(topAqSurf3)
-
-Xc = problemGeometry.getVolumeCenter()
-gmsh.model.occ.dilate(contSurfTags,Xc[0],Xc[1],Xc[2],1.+scalingFactor,1.+scalingFactor,1.0)
-gmsh.model.occ.synchronize()
+# === VOLUME FRAGMENTATION =========================================================
 
 # Get the tags of the surfaces associates with the fault surfaces
-faultSurfTags = problemGeometry.getGmshSurfaceDimTag(faultLeftSurf)
-# faultSurfTags += problemGeometry.getGmshSurfaceDimTag(faultRightSurf)
+faultSurfTags = []
+for faultSurf in faultSurfList:
+    faultSurfTags += problemGeometry.getGmshSurfaceDimTag(faultSurf)
 
+# Get the tags of the surfaces associates with the continuum surfaces
+contSurfTags = []
+for surf in continuumSurfList:
+    contSurfTags += problemGeometry.getGmshSurfaceDimTag(surf)
 
-gmsh.model.occ.synchronize()
-# Fragment the fault surfaces
+# Fragment the surfaces and volume with the fault surfaces
+# gmsh.model.occ.fragment(faultSurfTags, contSurfTags+volTags)
+# gmsh.model.occ.fragment(contSurfTags, faultSurfTags)
+gmsh.model.occ.fragment(volTags, faultSurfTags)
 
-gmsh.model.occ.fragment(faultSurfTags, contSurfTags)
-# [o1,o2] = gmsh.model.occ.intersect(faultSurfTags, contSurfTags,removeObject=False,removeTool=False)
-# gmsh.model.occ.dilate(contSurfTags,Xc[0],Xc[1],Xc[2],1.-scalingFactor,1.-scalingFactor,1.0)
-# gmsh.model.occ.fragment(faultSurfTags,[(3,vol)])
-
+# Syncronize and update the model
 gmsh.model.occ.synchronize()
 
 # ===  MESH GENERATION =========================================================
 
-gmsh.model.mesh.generate(2)
+gmsh.model.mesh.setSize(gmsh.model.getEntities(0), 50.0)
+
+# gmsh.model.mesh.generate(3)
 gmsh.write(problemName+".msh")
 
 # To see the faces of the elements
