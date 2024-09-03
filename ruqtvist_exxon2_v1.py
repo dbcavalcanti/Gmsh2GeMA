@@ -54,12 +54,13 @@ faultSurfList     = [faultLeftSurf,faultRightSurf]
 
 gmsh.initialize()
 gmsh.option.setNumber("General.Terminal", 1)
-gmsh.option.setNumber("Geometry.Tolerance", 1e-1)
+gmsh.option.setNumber("Geometry.Tolerance", 1)
 gmsh.option.setNumber("Geometry.ToleranceBoolean", 1)
-gmsh.option.setNumber("Mesh.ToleranceReferenceElement", 1e-1)
-# gmsh.option.setNumber("Geometry.SnapX", 1)
-# gmsh.option.setNumber("Geometry.SnapY", 1)
-# gmsh.option.setNumber("Geometry.SnapZ", 1)
+#gmsh.option.setNumber("Geometry.MatchMeshTolerance", 1e-1)
+#gmsh.option.setNumber("Mesh.ToleranceReferenceElement", 1e-1)
+#gmsh.option.setNumber("Geometry.SnapX", 1)
+#gmsh.option.setNumber("Geometry.SnapY", 1)
+#gmsh.option.setNumber("Geometry.SnapZ", 1)
 
 
 # ===  CREATE THE GEOMETRY =====================================================
@@ -84,7 +85,7 @@ h = problemGeometry.getModelDepthRange()
 factor = 1.5
 
 # Create the volume by extruding in the "-z" direction the top surface
-volTags = gmsh.model.occ.extrude(topSurfTags, 0, 0, -h*factor)
+#volTags = gmsh.model.occ.extrude(topSurfTags, 0, 0, -h*factor)
 
 gmsh.model.occ.synchronize()
 
@@ -101,9 +102,9 @@ for surf in continuumSurfList:
     contSurfTags += problemGeometry.getGmshSurfaceDimTag(surf)
 
 # Fragment the surfaces and volume with the fault surfaces
-# gmsh.model.occ.fragment(faultSurfTags, contSurfTags+volTags)
-# gmsh.model.occ.fragment(contSurfTags, faultSurfTags)
-gmsh.model.occ.fragment(volTags, faultSurfTags)
+gmsh.model.occ.fragment(faultSurfTags, contSurfTags)
+#gmsh.model.occ.fragment(contSurfTags, faultSurfTags)
+#gmsh.model.occ.fragment(volTags, faultSurfTags)
 
 # Syncronize and update the model
 gmsh.model.occ.synchronize()
@@ -112,7 +113,7 @@ gmsh.model.occ.synchronize()
 
 gmsh.model.mesh.setSize(gmsh.model.getEntities(0), 50.0)
 
-# gmsh.model.mesh.generate(3)
+gmsh.model.mesh.generate(2)
 gmsh.write(problemName+".msh")
 
 # To see the faces of the elements

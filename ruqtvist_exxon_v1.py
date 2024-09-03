@@ -18,19 +18,9 @@ problemName = "exxon_1"
 # Path to the OFF files of the geometry inside the examples folder
 problemName_path = os.path.join(os.getcwd(), "examples", problemName)
 
-# ===  FOLDER NAME =============================================================
-
-# Define the folder name
-folder_name = "gemaFiles"
-
-# Check if the folder exists
-if not os.path.exists(folder_name):
-    # Create the folder
-    os.makedirs(folder_name)
-
 # ===  READ THE GEOMETRY =======================================================
 
-# Create the geometry objects for each entity
+# Initialize the geometry object
 problemGeometry = geometry()
 
 # Load a surface from an OFF file
@@ -67,7 +57,7 @@ h = problemGeometry.getModelDepthRange()
 factor = 1.1
 
 # Create the volume by extruding in the "-z" direction the top surface
-# volTags = gmsh.model.occ.extrude(topSurfTags, 0, 0, -h*factor)
+volTags = gmsh.model.occ.extrude(topSurfTags, 0, 0, -h*factor)
 
 # === VOLUME FRAGMENTATION =========================================================
 
@@ -82,15 +72,14 @@ for surf in continuumSurfList:
     contSurfTags += problemGeometry.getGmshSurfaceDimTag(surf)
 
 # Fragment the surfaces and volume with the fault surfaces
-# gmsh.model.occ.fragment(faultSurfTags, contSurfTags+volTags)
-gmsh.model.occ.fragment(faultSurfTags, contSurfTags)
+gmsh.model.occ.fragment(faultSurfTags, contSurfTags+volTags)
 
 # Syncronize and update the model
 gmsh.model.occ.synchronize()
 
 # ===  MESH GENERATION =========================================================
 
-gmsh.model.mesh.generate(2)
+gmsh.model.mesh.generate(3)
 gmsh.write(problemName+".msh")
 
 # To see the faces of the elements
