@@ -53,6 +53,7 @@ faultSurfList     = [faultLeftSurf,faultRightSurf]
 
 gmsh.initialize()
 gmsh.option.setNumber("General.Terminal", 1)
+gmsh.option.setNumber("General.AbortOnError", 0)
 gmsh.option.setNumber("Geometry.Tolerance", 1)
 gmsh.option.setNumber("Geometry.ToleranceBoolean", 1)
 #gmsh.option.setNumber("Geometry.MatchMeshTolerance", 1e-1)
@@ -77,6 +78,11 @@ gmsh.model.occ.synchronize()
 # Get the tags of top surfaces
 topSurfTags = problemGeometry.getGmshSurfaceDimTag(topSurf)
 
+# Get the center of the top surface
+Xtop = problemGeometry.getSurfaceCenter(topSurf)
+
+gmsh.model.occ.dilate(topSurfTags, Xtop[0], Xtop[1], Xtop[2], 1.0001, 1.0001, 1.0)
+
 # Get the depth of the model
 h = problemGeometry.getModelDepthRange()
 
@@ -100,11 +106,16 @@ contSurfTags = []
 for surf in continuumSurfList:
     contSurfTags += problemGeometry.getGmshSurfaceDimTag(surf)
 
+continuumSurfListRed = [bottomSurf, topSurf, topAqSurf2, bottomAqSurf2]
+contSurfRedTags = []
+for surf in continuumSurfListRed:
+    contSurfRedTags += problemGeometry.getGmshSurfaceDimTag(surf)
+
 # Fragment the surfaces and volume with the fault surfaces
 #gmsh.model.occ.fragment(volTags, faultSurfTags+contSurfTags)
-gmsh.model.occ.fragment(contSurfTags, faultSurfTags,removeObject=True, removeTool=True)
+#gmsh.model.occ.fragment(contSurfTags, faultSurfTags,removeObject=True, removeTool=True)
 #gmsh.model.occ.fragment(contSurfTags, faultSurfTags)
-#gmsh.model.occ.fragment(volTags, faultSurfTags)
+gmsh.model.occ.fragment(volTags, faultSurfTags+contSurfRedTags)
 
 # Syncronize and update the model
 gmsh.model.occ.synchronize()

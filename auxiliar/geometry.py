@@ -147,6 +147,13 @@ class geometry:
         return abs(max(z)-min(z))
     
     # ---------------------------------------------------------------------
+    def getSurfaceCenter(self, surfTag): 
+        x = [node[0] for node in self.surf[surfTag].nodes]
+        y = [node[1] for node in self.surf[surfTag].nodes]
+        z = [node[2] for node in self.surf[surfTag].nodes]
+        return [np.mean(x), np.mean(y), np.mean(z)]
+    
+    # ---------------------------------------------------------------------
     def getVolumeCenter(self): 
         x = [node[0] for node in self.node]
         y = [node[1] for node in self.node]

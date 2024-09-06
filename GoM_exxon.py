@@ -43,8 +43,8 @@ gmsh.open(os.path.join(problemName_path, "test3horizons1fault.msh"))
 
 # ===  MESH GENERATION =========================================================
 
-gmsh.model.mesh.generate(2)
-gmsh.write(problemName+".msh")
+#gmsh.model.mesh.generate(2)
+#gmsh.write(problemName+".msh")
 
 # To see the faces of the elements
 gmsh.option.setNumber('Mesh.SurfaceFaces', 1)
