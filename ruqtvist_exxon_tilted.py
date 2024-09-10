@@ -13,7 +13,7 @@ from auxiliar.geometry import geometry
 
 # ===  PROBLEM NAME ===========================================================
 
-problemName = "exxon_2"
+problemName = "RutqvistRotatedFault"
 
 # Path to the OFF files of the geometry inside the examples folder
 problemName_path = os.path.join(os.getcwd(), "examples", problemName)
@@ -37,17 +37,18 @@ problemGeometry = geometry()
 bottomSurf     = problemGeometry.loadSurface(os.path.join(problemName_path, "Bottom_patch_1.off"),"BottomSurface1")
 bottomAqSurf1  = problemGeometry.loadSurface(os.path.join(problemName_path, "Bottom_Aquifer_patch_1.off"),"BottomAqSurface1")
 bottomAqSurf2  = problemGeometry.loadSurface(os.path.join(problemName_path, "Bottom_Aquifer_patch_2.off"),"BottomAqSurface2")
-bottomAqSurf3  = problemGeometry.loadSurface(os.path.join(problemName_path, "Bottom_Aquifer_patch_3.off"),"BottomAqSurface3")
+bottomCapSurf1 = problemGeometry.loadSurface(os.path.join(problemName_path, "Bottom_Cap_patch_1.off"),"BottomCapSurface1")
+bottomCapSurf2 = problemGeometry.loadSurface(os.path.join(problemName_path, "Bottom_Cap_patch_2.off"),"BottomCapSurface2")
 topSurf        = problemGeometry.loadSurface(os.path.join(problemName_path, "Top_patch_1.off"),"TopSurface")
 topAqSurf1     = problemGeometry.loadSurface(os.path.join(problemName_path, "Top_Aquifer_patch_1.off"),"TopAqSurface1")
 topAqSurf2     = problemGeometry.loadSurface(os.path.join(problemName_path, "Top_Aquifer_patch_2.off"),"TopAqSurface1")
-topAqSurf3     = problemGeometry.loadSurface(os.path.join(problemName_path, "Top_Aquifer_patch_3.off"),"TopAqSurface2")
-faultLeftSurf  = problemGeometry.loadSurface(os.path.join(problemName_path, "Fault_Left_patch_1.off"),"FaultLeftSurface")
-faultRightSurf = problemGeometry.loadSurface(os.path.join(problemName_path, "Fault_Right_patch_1.off"),"FaultRightSurface")
+topCapSurf1    = problemGeometry.loadSurface(os.path.join(problemName_path, "Top_Cap_patch_1.off"),"TopCapSurface1")
+topCapSurf2    = problemGeometry.loadSurface(os.path.join(problemName_path, "Top_Cap_patch_2.off"),"TopCapSurface2")
+faultSurf      = problemGeometry.loadSurface(os.path.join(problemName_path, "Fault_patch_1.off"),"FaultSurface")
 
 # List with each type of surface
-continuumSurfList = [bottomSurf, bottomAqSurf1, bottomAqSurf2, bottomAqSurf3, topSurf, topAqSurf1, topAqSurf2, topAqSurf3]
-faultSurfList     = [faultLeftSurf,faultRightSurf]
+continuumSurfList = [bottomSurf, bottomAqSurf1, bottomAqSurf2, bottomCapSurf1, bottomCapSurf2, topSurf, topAqSurf1, topAqSurf2, topCapSurf1, topCapSurf2]
+faultSurfList     = [faultSurf]
 
 # ===  INITIALIZE GMSH ====================================================
 

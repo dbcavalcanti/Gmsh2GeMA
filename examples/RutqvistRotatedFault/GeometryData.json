@@ -1,0 +1,79 @@
+{
+    "export_closed_regions": true,
+    "export_triangulated_surfaces": true,
+
+    "initial_fault_mesh_size": 200.0,
+    "initial_regions_mesh_size": 1000.0,
+
+    "iterated_fault_mesh_size": 20.0,
+    "iterated_regions_mesh_size": 10.0,
+    
+    "final_fault_mesh_size": 70.0,
+    "final_regions_mesh_size": 100.0,
+
+
+    "faults": [
+        {
+            "name": "Fault",
+            "patches": [
+                "Fault_patch_1.off"
+            ]
+        }
+    ],
+    "gid_path": "C:/Users/xtort/Apps/GiD 17.0/",
+    "horizons": [
+        {
+            "name": "Bottom",
+            "patches": [
+                "Bottom_patch_1.off"
+            ]
+        },
+        {
+            "name": "Bottom_Aquifer",
+            "patches": [
+                "Bottom_Aquifer_patch_1.off",
+                "Bottom_Aquifer_patch_2.off"
+            ]
+        },
+        {
+            "name": "Bottom_Cap",
+            "patches": [
+                "Bottom_Cap_patch_1.off",
+                "Bottom_Cap_patch_2.off"
+            ]
+        },
+        {
+            "name": "Top",
+            "patches": [
+                "Top_patch_1.off"
+            ]
+        },
+        {
+            "name": "Top_Aquifer",
+            "patches": [
+                "Top_Aquifer_patch_1.off",
+                "Top_Aquifer_patch_2.off"
+            ]
+        },
+        {
+            "name": "Top_Cap",
+            "patches": [
+                "Top_Cap_patch_1.off",
+                "Top_Cap_patch_2.off"
+            ]
+        }
+    ],
+    "model_extension": {
+        "center": [
+            1000,
+            500
+        ],
+        "rotation": 0,
+        "size": [
+            2000,
+            1000
+        ]
+    },
+    "project_name": "RutqvistRotatedFault",
+    "regions_mesh_size": 100
+}
