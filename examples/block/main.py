@@ -27,7 +27,7 @@ from problemMaterials import problemMaterials
 
 # ===  PROBLEM NAME ===========================================================
 
-problemName = "notchedBeam"
+problemName = "block"
 
 # ===  FOLDER NAME =============================================================
 
@@ -50,34 +50,21 @@ gmsh.option.setNumber("General.Terminal", 1)
 dim = 2
 
 # Domain dimensions (m)
-Lx  = 0.45
-Ly  = 0.10
-
-# Specify the finite element type
-#    2 - linear triangles
-#    3 - linear quadrilaterals
-elementType = 3
+Lx  = 1.0
+Ly  = 1.0
 
 # Mesh characteristic lenght
-lc = 0.01
+lc = Lx/50
 
 # Create the surfaces
-surf1 = gmsh.model.occ.addRectangle(0.0, 0.0, 0.0, Lx, 0.02)
-surf2 = gmsh.model.occ.addRectangle(0.0, 0.02, 0.0, Lx, Ly-0.02)
-surf = [surf1,surf2]
-
-# Discontinuity points
-pf1 = gmsh.model.occ.addPoint(Lx/2.0, 0.0, 0.0)
-pf2 = gmsh.model.occ.addPoint(Lx/2.0, Ly, 0.0)
-d1 = gmsh.model.occ.addLine(pf1, pf2)
+surf1 = gmsh.model.occ.addRectangle(0.0, 0.0, 0.0, Lx, Ly)
+surf = [surf1]
 
 # Synchronize the model
 gmsh.model.occ.synchronize()
 
 # Set here the surfaces that will compose the mesh domain
-beamUnderNotch = gmsh.model.addPhysicalGroup(dim, surf, name='beamUnderNotch')
-beamAboveNotch = gmsh.model.addPhysicalGroup(dim, surf, name='beamAboveNotch')
-meshDomain     = gmsh.model.addPhysicalGroup(dim, surf, name='ContinuumDomain')
+meshDomain = gmsh.model.addPhysicalGroup(dim, surf, name='ContinuumDomain')
 
 # ===  DEFINITION OF PHYSICAL GROUPS FOR BOUNDARY CONDITIONS =====================
 
@@ -88,10 +75,10 @@ leftBorder   = aux.getBoundaryLines(surf, gmsh,np.array([-1.0, 0.0, 0.0]))
 rightBorder  = aux.getBoundaryLines(surf, gmsh,np.array([ 1.0, 0.0, 0.0]))
 
 # Create the physical groups to apply the boundary conditions on the borders
-bottomBorderPG = gmsh.model.addPhysicalGroup( 1, bottomBorder, name='bottomBorder')
-topBorderPG    = gmsh.model.addPhysicalGroup( 1, topBorder,    name='topBorder')
-leftBorderPG   = gmsh.model.addPhysicalGroup( 1, leftBorder,   name='leftBorder')
-rightBorderPG  = gmsh.model.addPhysicalGroup( 1, rightBorder,  name='rightBorder')
+bottomBorderPG = gmsh.model.addPhysicalGroup( 1, bottomBorder, name='gridBottom')
+topBorderPG    = gmsh.model.addPhysicalGroup( 1, topBorder,    name='gridTop')
+leftBorderPG   = gmsh.model.addPhysicalGroup( 1, leftBorder,   name='gridLeft')
+rightBorderPG  = gmsh.model.addPhysicalGroup( 1, rightBorder,  name='gridRight')
 
 # ===  MESH CONFIGURATION =========================================================
 
@@ -99,9 +86,7 @@ rightBorderPG  = gmsh.model.addPhysicalGroup( 1, rightBorder,  name='rightBorder
 gmsh.model.mesh.setSize(gmsh.model.getEntities(0), lc)
 
 # Combine the triangles to obtain quadrilateral elements
-if elementType == 3:  # Quadrilateral element
-    gmsh.model.mesh.setRecombine(2, surf1)
-    gmsh.model.mesh.setRecombine(2, surf2)
+gmsh.model.mesh.setRecombine(2, surf1)
 
 # To see the faces of the elements
 gmsh.option.setNumber('Mesh.SurfaceFaces', 1)
@@ -111,7 +96,13 @@ gmsh.option.setNumber('Mesh.Points', 1)
 
 # Generate the mesh
 gmsh.option.setNumber("Mesh.Algorithm", 5)
+
+# Quadratic mesh
+gmsh.option.setNumber("Mesh.SecondOrderIncomplete", 1)
+
 gmsh.model.mesh.generate(2)
+
+gmsh.model.mesh.setOrder(2)
 
 # ===  RENUMBER THE NODES  ==============================================
 
@@ -138,7 +129,7 @@ mesh = gemaMesh(problemName,dim,gmsh)
 mesh.setNodesPhysicalGroup(meshDomain)
 
 # Set the materials and physical groups to the mesh
-mesh.setCellPhysicalGroup([meshDomain,beamUnderNotch,beamAboveNotch])
+mesh.setCellPhysicalGroup([meshDomain])
 
 # Set the physical groups to the node sets
 mesh.setNodeSetData([( 1, topBorderPG),( 1, bottomBorderPG),(1, leftBorderPG),(1, rightBorderPG)])
@@ -148,17 +139,31 @@ model.setMesh(mesh)
 
 # ===  BOUNDARY CONDITIONS ========================================
 
-model.addBoundaryCondition('node displacements','bcDisplacements',[([0,0],'bottomBorder'),([0,'nil'],'rightBorder'),([0,'nil'],'leftBorder')])
+model.addBoundaryCondition('node displacements','bcDisplacements',[([0,0],'leftBorder')])
 
 # === WRITE FILES TO GEMA ========================================
 
 # Write the mesh file
 mesh.writeMeshFile()
-# model.writeModelFile()
+model.writeModelFile()
 
 # Write the gmsh mesh file
 gmsh.write(problemName + ".msh")
 
 # Launch the GUI to see the results:
 gmsh.fltk.run()
+
+# Print the number of elements
+elem_types, elem_tags, elem_node_tags = gmsh.model.mesh.getElements()
+num_elements = sum(len(tags) for tags in elem_tags)  # Total number of elements
+print(f"Number of elements: {num_elements}")
+
+
+# Get nodes and their coordinates
+node_tags, node_coords, _ = gmsh.model.mesh.getNodes()
+
+# The number of nodes is the length of the node_tags list
+num_nodes = len(node_tags)
+print(f"Number of nodes: {num_nodes}")
+
 gmsh.finalize()
