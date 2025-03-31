@@ -97,7 +97,7 @@ faultReservoirCapRock_params = {
 
 # Create a dictionary to hold the dictionaries for each material
 problemMaterials = {
-    'reservoir': reservoir_params,
+    'ContinuumDomain': reservoir_params,
     'capRock': capRock_params,
     'upperAquifer': upperAquifer_params,
     'basalAquifer': basalAquifer_params,

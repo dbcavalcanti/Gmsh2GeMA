@@ -7,6 +7,7 @@
 
 import numpy as np
 from gemaModel.mesh.gmsh2GeMA_ElementTypes import gmsh2GeMA_elementTypes
+from gemaModel.mesh.gmsh2GeMA_ElementTypes import gmsh2GeMA_elementTypes_NumberOfNodes
 
 class gemaMesh:
     def __init__(self, _problemName, _dim = 2, gmsh = [] , _stateVariables = [],_nodeData = [], _cellData = [], _cellProperties = [], _nodeSetData = []):
@@ -182,13 +183,14 @@ class gemaMesh:
             with open(self.fileName, 'a') as file:
                 for elemType in elemTypes:
                     gemaElement = gmsh2GeMA_elementTypes[elemType]
+                    nNodes = gmsh2GeMA_elementTypes_NumberOfNodes[elemType]
                     file.write("\n")
                     file.write(f"-- Mesh {gemaElement} elements of {physicalGroupName}\n")
                     file.write("\n")
                     file.write(f"local {gemaElement}_{physicalGroupName} = {{\n")
                     for e in entitiesTags:
                         _, elem = self.gmsh.model.mesh.getElementsByType(elemType, e)
-                        elem = elem.reshape((-1,elemType+1))
+                        elem = elem.reshape((-1,nNodes))
                         for i, connectivity in enumerate(elem, start=1):
                             file.write("    {")
                             file.write(", ".join(str(node) for node in connectivity))
